@@ -1,0 +1,19 @@
+
+
+
+#more-itertools
+#numba
+#tiktoken
+#tqdm
+#triton>=2.0.0,<3;platform_machine=="x86_64" and sys_platform=="linux" or sys_platform=="linux2"
+#SpeechRecognition
+#accelerate
+#argparse
+#keyboard
+numpy
+py2app
+pyaudio
+pyperclip
+rumps
+torch
+transformers

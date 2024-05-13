@@ -232,10 +232,10 @@ class Recorder:
         self.recording = True
         thread = threading.Thread(target=self._record_impl)
         thread.start()
-        print("recording...")
 
     def _record_impl(self):
         self.recording = True
+        print("recording...")
         p = pyaudio.PyAudio()
         stream = p.open(format=pyaudio.paInt16,
                         channels=1,
@@ -249,10 +249,11 @@ class Recorder:
         stream.stop_stream()
         stream.close()
         p.terminate()
+        print("recordering stopped")
 
     def stop(self):
         self.recording = False
-        sleep(0.05)
+        sleep(0.5)
         return self.frames
 
 class RecorderApp(rumps.App):
@@ -282,8 +283,15 @@ class RecorderApp(rumps.App):
         )
         print('models loaded')
 
-    def _transcribe(self, args):
-        frames = self.recorder.stop()
+    def start(self):
+        self.title='🔴'
+        self.recorder.start()
+
+    def stop(self):
+        return self.recorder.stop()
+
+    def transcribe(self, frames, args):
+        print("transcribing...")
         audio_data = numpy.frombuffer(b''.join(frames), dtype=numpy.int16)
         audio_data_fp32 = audio_data.astype(numpy.float32) / 32768.0
         text = self.transcriptor(
@@ -298,60 +306,61 @@ class RecorderApp(rumps.App):
     @rumps.clicked(transcript)
     def transcript(self, _):
         if self.recorder.recording:
-            text = self._transcribe({})
+            frames = self.stop()
+            text = self.transcribe(frames, {})
             print(text)
             pyperclip.copy(text)
             self.title='🔵'
             self.menu[transcript].title = transcript
         else:
-            self.title='🔴'
-            self.recorder.start()
+            self.start()
             self.menu[transcript].title = '⏺ ' + transcript
 
     @rumps.clicked(transcript_to_english)
     def transcript_to_english(self, _):
         if self.recorder.recording:
-            text = self._transcribe({"task": "translate"})
+            frames = self.stop()
+            text = self.transcribe(frames, {"task": "translate"})
             print(text)
             pyperclip.copy(text)
             self.title='🔵'
             self.menu[transcript_to_english].title = transcript_to_english
         else:
-            self.title='🔴'
-            self.recorder.start()
+            self.start()
             self.menu[transcript_to_english].title = '⏺ ' + transcript_to_english
 
     @rumps.clicked(transcript_to_spanish)
     def transcript_to_spanish(self, _):
         if self.recorder.recording:
-            text = self._transcribe({"task": "translate"})
+            frames = self.stop()
+            text = self.transcribe(frames, {"task": "translate"})
             print(text)
+            print("translating...")
             text = self.en2es(text)[0]['translation_text']
             print(text)
             pyperclip.copy(text)
             self.title='🔵'
             self.menu[transcript_to_spanish].title = transcript_to_spanish
         else:
-            self.title='🔴'
-            self.recorder.start()
+            self.start()
             self.menu[transcript_to_spanish].title = '⏺ ' + transcript_to_spanish
 
     @rumps.clicked(transcript_to_russian)
     def transcript_to_russian(self, _):
         if self.recorder.recording:
-            text = self._transcribe({"task": "translate"})
+            frames = self.stop()
+            text = self.transcribe(frames, {"task": "translate"})
             print(text)
+            print("translating...")
             text = self.en2ru(text)[0]['translation_text']
             print(text)
             pyperclip.copy(text)
             self.title='🔵'
             self.menu[transcript_to_russian].title = transcript_to_russian
         else:
-            self.title='🔴'
-            self.recorder.start()
+            self.start()
             self.menu[transcript_to_russian].title = '⏺ ' + transcript_to_russian
 
 if __name__ == "__main__":
     app = RecorderApp("openai/whisper-large-v3", "facebook/nllb-200-distilled-600M")
     app.run()
-
